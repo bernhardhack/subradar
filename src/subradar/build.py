@@ -102,7 +102,7 @@ def write_site(events: list[Event], results: list[SourceResult], cfg: Config, ou
         "generated": now.isoformat(),
         "sample": sample,
         "scoring": scoring,
-        "bases": {"wien": "Wien", "brunnbach": "Brunnbach"},
+        "bases": cfg.bases,
         "sources": [r.model_dump() for r in results],
         "events": [e.model_dump(mode="json") for e in events],
     }

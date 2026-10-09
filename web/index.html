@@ -16,10 +16,8 @@
 <body>
 <header class="top">
   <h1 class="mark">SubRadar</h1>
-  <div class="base" role="group" aria-label="Wo bist du am Wochenende?">
+  <div class="base" role="group" aria-label="Wo bist du?" data-bases>
     <span class="base-label">Ich bin in</span>
-    <button type="button" data-base="wien" aria-pressed="true">Wien</button>
-    <button type="button" data-base="brunnbach" aria-pressed="false">Brunnbach</button>
   </div>
 </header>
 
@@ -28,6 +26,7 @@
 <nav class="tabs" role="tablist" aria-label="Ansicht">
   <button role="tab" type="button" data-view="weekend" aria-selected="true">Wochenende</button>
   <button role="tab" type="button" data-view="later" aria-selected="false">Später</button>
+  <button role="tab" type="button" data-view="list" aria-selected="false">Programm</button>
   <button role="tab" type="button" data-view="saved" aria-selected="false">Gemerkt <span class="count" data-count></span></button>
 </nav>
 
@@ -42,11 +41,20 @@
     </div>
   </section>
 
+  <section class="listing" data-panel="list" hidden>
+    <div class="list-tools">
+      <label class="only-top"><input type="checkbox" data-only-top> Nur Top-Tipps</label>
+    </div>
+    <div data-list></div>
+  </section>
+
   <section class="saved" data-panel="saved" hidden>
     <div data-saved-list></div>
     <div class="saved-tools">
       <a class="tool" data-subscribe href="radar.ics">Top-Tipps als Kalender abonnieren</a>
+      <button type="button" class="tool" data-transfer>Auf anderes Gerät übertragen</button>
       <button type="button" class="tool" data-export>Swipes exportieren</button>
+      <p class="hint" data-transfer-hint hidden></p>
       <p class="hint">Die exportierte Datei als <code>feedback/swipes.json</code> ins Repo legen, dann lernt die Bewertung von deinen Entscheidungen.</p>
     </div>
   </section>
@@ -58,6 +66,7 @@
 </dialog>
 
 <footer class="foot" data-foot></footer>
+<div class="toast" role="status" aria-live="polite" data-toast hidden></div>
 
 <script src="app.js" defer></script>
 </body>

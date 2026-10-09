@@ -16,7 +16,9 @@ sources.yaml ──► fetch ──► extract ──► score ──► site/
 
 - **Extraction** tries the cheapest reliable route first: a calendar feed, then schema.org event data on the page, and only then Claude reading the page text. Claude has to quote the date from the page; events whose quote isn't really on the page are dropped, so it can't invent dates.
 - **Scoring** reads `taste.md` and your recent swipes (`feedback/swipes.json`). Without an API key it falls back to the keyword lists in `sources.yaml`.
-- **Wien / Brunnbach toggle** re-sorts by travel time (`travel_minutes` in `sources.yaml`).
+- **"Ich bin in" Steyr / Wien / Brunnbach** re-sorts by travel time (`bases` and `travel_minutes` in `sources.yaml`).
+- **Programm tab**: everything coming up, day by day, without deciding anything. "Nur Top-Tipps" narrows it to scores of 7+, and "Merken" saves an event straight to Gemerkt.
+- **Moving to another device**: Gemerkt → "Auf anderes Gerät übertragen" makes a link that carries your decisions. Open it on the other device and they are merged in. There's no account and nothing is stored on a server.
 - **Hikes**: on dry weekend days (Open-Meteo forecast) one route from `sources.yaml` is suggested.
 - **Robustness**: a dead site never breaks the run. The footer of the app lists each source and how it was read. If `NTFY_TOPIC` is set, failing sources trigger a push.
 - **Claude calls are cached** (`.cache/`, kept between Action runs), so unchanged pages cost nothing.

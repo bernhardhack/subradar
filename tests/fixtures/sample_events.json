@@ -4,7 +4,7 @@
   {"title": "Signal/Rauschen: Offenes Hacklab", "day_offset": 0, "time": "18:00", "venue": "Stadtwerkstatt", "city": "Linz", "url": "https://stwst.at/", "source": "sample",
    "description": "Löten, Funk-Experimente und kurze Talks zu selbstgebauter Infrastruktur.", "score": 7.8, "why": "Hackerkultur zum Anfassen, mit Lötkolben statt Vortragsfolien.", "tags": ["hacklab", "medienkunst"]},
   {"title": "Die Zahnärzte", "day_offset": 1, "time": "21:00", "venue": "KAPU", "city": "Linz", "url": "https://www.kapu.or.at/", "source": "sample",
-   "description": "Post-Punk mit Saxophon, zweite Platte frisch draußen.", "score": 8.1, "why": "Kantiger Post-Punk in einem kleinen Raum, der Abend wird laut und eng.", "tags": ["post-punk"]},
+   "description": "Post-Punk mit Saxophon, zweite Platte frisch draußen.", "score": 8.1, "why": "Kantiger Post-Punk in einem kleinen Raum, der Abend wird laut und eng.", "tags": ["post-punk"], "image": "icon.svg"},
   {"title": "Hohe Dirn", "day_offset": 1, "time": "09:00", "venue": "Brunnbach", "city": "Brunnbach", "url": "https://www.nationalpark-kalkalpen.at/", "source": "Wetter", "kind": "outdoor",
    "description": "", "score": 7.0, "why": "Trocken angesagt: 10 % Regenrisiko, bis 17 °C.", "tags": ["draußen"]},
   {"title": "Feedback Loops — Kybernetik und Kunst", "day_offset": 1, "time": "17:00", "venue": "Ars Electronica", "city": "Linz", "url": "https://ars.electronica.art/", "source": "sample",

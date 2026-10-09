@@ -14,17 +14,18 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
   // ---------- state ----------
-  const state = { data: null, events: [], view: "weekend", base: "wien", swipes: {}, undo: [] };
+  const state = { data: null, events: [], view: "weekend", base: "steyr", swipes: {}, undo: [], onlyTop: false };
 
   function load() {
     try {
       const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-      state.base = raw.base === "brunnbach" ? "brunnbach" : "wien";
+      if (typeof raw.base === "string") state.base = raw.base;
+      state.onlyTop = !!raw.onlyTop;
       state.swipes = raw.swipes && typeof raw.swipes === "object" ? raw.swipes : {};
     } catch { /* private mode or blocked storage: run without memory */ }
   }
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ base: state.base, swipes: state.swipes })); } catch { /* ignore */ }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ base: state.base, swipes: state.swipes, onlyTop: state.onlyTop })); } catch { /* ignore */ }
   }
 
   // ---------- helpers ----------
@@ -99,7 +100,7 @@
         <div class="p-when">${esc(weekday(d))} ${esc(timeOf(ev))}<small>${esc(dLong.format(d))}</small></div>
         ${tr ? `<div class="sticker">${esc(tr[0])}<small>${esc(tr[1])}</small></div>` : ""}
       </div>
-      <div class="p-art">${img}<h2 class="p-title" data-text="${esc(ev.title)}"><span>${esc(ev.title)}</span></h2></div>
+      <div class="p-art${ev.image ? " has-img" : ""}">${img}<h2 class="p-title" data-text="${esc(ev.title)}"><span>${esc(ev.title)}</span></h2></div>
       <div class="p-foot">
         ${ev.why ? `<p class="p-why">${esc(ev.why)}</p>` : ""}
         <p class="p-meta">${esc(ev.venue)}${ev.city && ev.city !== ev.venue ? `, ${esc(ev.city)}` : ""}</p>
@@ -114,7 +115,8 @@
     const box = el.parentElement;
     const len = el.textContent.length;
     let fs = len <= 10 ? 128 : len <= 20 ? 100 : len <= 34 ? 78 : 60;
-    const maxH = box.clientHeight;
+    // with an image the title gets the lower part of the poster and never runs over the picture
+    const maxH = box.classList.contains("has-img") ? box.clientHeight * 0.45 : box.clientHeight;
     for (let round = 0; round < 10; round++) {
       el.style.setProperty("--fs", fs + "px");
       for (const wd of [130, 115, 100, 88, 76, 64, 55]) {
@@ -167,14 +169,18 @@
 
   function topCard() { return deckEl.querySelector(".poster:last-of-type"); }
 
-  function decide(verdict, card = topCard()) {
-    if (!card || card.classList.contains("fly")) return;
-    const ev = state.events.find((e) => e.id === card.dataset.id);
-    if (!ev) return;
+  function record(ev, verdict) {
     state.swipes[ev.id] = {
       verdict, at: new Date().toISOString(), title: ev.title, venue: ev.venue, city: ev.city,
       tags: ev.tags || [], start: ev.start, score: ev.score,
     };
+  }
+
+  function decide(verdict, card = topCard()) {
+    if (!card || card.classList.contains("fly")) return;
+    const ev = state.events.find((e) => e.id === card.dataset.id);
+    if (!ev) return;
+    record(ev, verdict);
     state.undo.push(ev.id);
     save();
     navigator.vibrate?.(8);
@@ -304,6 +310,122 @@
     list.innerHTML = html;
   }
 
+  // ---------- programme overview (no decisions needed) ----------
+  function dayGroups(evs, rowFn) {
+    let html = "", lastDay = "";
+    for (const ev of evs) {
+      const d = new Date(ev.start);
+      const key = d.toDateString();
+      if (key !== lastDay) { html += `<h3 class="day-h">${esc(dLong.format(d))}</h3>`; lastDay = key; }
+      html += rowFn(ev);
+    }
+    return html;
+  }
+
+  function listRow(ev) {
+    const tr = travelText(ev);
+    const top = (ev.score ?? 0) >= 7;
+    const saved = state.swipes[ev.id]?.verdict === "yes";
+    return `<div class="row ${top ? "is-top" : "is-low"}" style="--c1:${inksFor(ev)[0]}">
+      <div class="row-time">${esc(timeOf(ev))}</div>
+      <p class="row-title"><button type="button" class="row-open" data-open="${esc(ev.id)}">${esc(ev.title)}</button></p>
+      <p class="row-meta">${esc(ev.venue)}${ev.city !== ev.venue ? ", " + esc(ev.city) : ""}${tr ? `, ${esc(tr[0])} ${esc(tr[1])}` : ""}</p>
+      ${top && ev.why ? `<p class="row-why">${esc(ev.why)}</p>` : ""}
+      <div class="row-links">
+        <button type="button" class="save-toggle" data-toggle-save="${esc(ev.id)}" aria-pressed="${saved}">${saved ? "Gemerkt" : "Merken"}</button>
+        ${ev.url ? `<a href="${esc(ev.url)}" target="_blank" rel="noopener">Veranstalter</a>` : ""}
+      </div>
+    </div>`;
+  }
+
+  function renderList() {
+    const evs = upcoming()
+      .filter((e) => !state.onlyTop || (e.score ?? 0) >= 7)
+      .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+    $("[data-only-top]").checked = state.onlyTop;
+    $("[data-list]").innerHTML = evs.length
+      ? dayGroups(evs, listRow)
+      : `<p class="saved-empty">Gerade keine Termine${state.onlyTop ? " mit Top-Bewertung. Schalte den Filter aus, um alle zu sehen." : "."}</p>`;
+  }
+
+  function toggleSave(id) {
+    const ev = state.events.find((e) => e.id === id);
+    if (!ev) return;
+    if (state.swipes[id]?.verdict === "yes") delete state.swipes[id];
+    else record(ev, "yes");
+    save();
+    renderCount();
+    const btn = $(`[data-toggle-save="${CSS.escape(id)}"]`);
+    if (btn) {
+      const on = state.swipes[id]?.verdict === "yes";
+      btn.setAttribute("aria-pressed", String(on));
+      btn.textContent = on ? "Gemerkt" : "Merken";
+    }
+  }
+
+  // ---------- move decisions to another device (no account needed) ----------
+  const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const unb64url = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+
+  async function pipe(bytes, stream) {
+    return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+  }
+
+  async function transferLink() {
+    const compact = {};
+    for (const [id, sw] of Object.entries(state.swipes)) compact[id] = [sw.verdict === "yes" ? 1 : 0, Math.round(Date.parse(sw.at) / 1000)];
+    let bytes = new TextEncoder().encode(JSON.stringify(compact));
+    let prefix = "j";
+    if ("CompressionStream" in window) { bytes = await pipe(bytes, new CompressionStream("deflate-raw")); prefix = "z"; }
+    return `${location.origin}${location.pathname}#sync=${prefix}${b64url(bytes)}`;
+  }
+
+  async function importFromHash() {
+    const m = location.hash.match(/^#sync=([jz])([A-Za-z0-9_-]+)$/);
+    if (!m) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    try {
+      let bytes = unb64url(m[2]);
+      if (m[1] === "z") bytes = await pipe(bytes, new DecompressionStream("deflate-raw"));
+      const compact = JSON.parse(new TextDecoder().decode(bytes));
+      let n = 0;
+      for (const [id, [yes, at]] of Object.entries(compact)) {
+        const when = new Date(at * 1000).toISOString();
+        if (state.swipes[id] && Date.parse(state.swipes[id].at) >= at * 1000) continue;
+        const ev = state.events.find((e) => e.id === id);
+        state.swipes[id] = { verdict: yes ? "yes" : "no", at: when, title: ev?.title, venue: ev?.venue, city: ev?.city, tags: ev?.tags || [], start: ev?.start, score: ev?.score };
+        n++;
+      }
+      save();
+      toast(n ? `${n} Entscheidungen übernommen.` : "Dieses Gerät war schon auf dem gleichen Stand.");
+    } catch {
+      toast("Der Übertragungslink ist unvollständig. Kopiere ihn noch einmal ganz.");
+    }
+  }
+
+  async function shareTransfer() {
+    const url = await transferLink();
+    const hint = $("[data-transfer-hint]");
+    if (navigator.share) {
+      try { await navigator.share({ title: "SubRadar übertragen", url }); return; } catch { /* cancelled: fall back to copy */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      hint.textContent = "Link kopiert. Öffne ihn auf dem anderen Gerät, dann werden deine Entscheidungen dort übernommen.";
+    } catch {
+      hint.textContent = url;
+    }
+    hint.hidden = false;
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("[data-toast]");
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (t.hidden = true), 4000);
+  }
+
   function renderCount() {
     const n = savedEvents().length;
     $("[data-count]").textContent = n ? String(n) : "";
@@ -313,10 +435,11 @@
   function setView(view) {
     state.view = view;
     $$("[role=tab]").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.view === view)));
-    const isSaved = view === "saved";
-    $("[data-panel=deck]").hidden = isSaved;
-    $("[data-panel=saved]").hidden = !isSaved;
-    if (isSaved) renderSaved();
+    $("[data-panel=deck]").hidden = view === "saved" || view === "list";
+    $("[data-panel=list]").hidden = view !== "list";
+    $("[data-panel=saved]").hidden = view !== "saved";
+    if (view === "saved") renderSaved();
+    else if (view === "list") renderList();
     else { renderRange(); renderDeck(); }
   }
 
@@ -333,7 +456,9 @@
     state.base = base;
     save();
     $$("[data-base]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.base === base)));
-    if (state.view === "saved") renderSaved(); else { renderRange(); renderDeck(); }
+    if (state.view === "saved") renderSaved();
+    else if (state.view === "list") renderList();
+    else { renderRange(); renderDeck(); }
   }
 
   function renderFoot() {
@@ -366,10 +491,17 @@
     else if (t.dataset.base) setBase(t.dataset.base);
     else if (t.dataset.unsave) { delete state.swipes[t.dataset.unsave]; save(); renderSaved(); renderCount(); }
     else if (t.hasAttribute("data-export")) exportSwipes();
+    else if (t.hasAttribute("data-transfer")) shareTransfer();
+    else if (t.dataset.toggleSave) toggleSave(t.dataset.toggleSave);
+    else if (t.dataset.open) { const ev = state.events.find((e) => e.id === t.dataset.open); if (ev) openSheet(ev); }
+  });
+
+  document.addEventListener("change", (e) => {
+    if (e.target.matches("[data-only-top]")) { state.onlyTop = e.target.checked; save(); renderList(); }
   });
 
   document.addEventListener("keydown", (e) => {
-    if (sheet.open || state.view === "saved" || e.target.closest("input,textarea")) return;
+    if (sheet.open || state.view === "saved" || state.view === "list" || e.target.closest("input,textarea")) return;
     if (e.key === "ArrowRight") { e.preventDefault(); decide("yes"); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); decide("no"); }
     else if (e.key === "Backspace" || e.key === "z") { e.preventDefault(); undo(); }
@@ -381,9 +513,21 @@
     resizeTimer = setTimeout(() => $$(".p-title", deckEl).forEach(fitTitle), 150);
   });
 
+  function renderBases() {
+    const bases = state.data?.bases || { steyr: "Steyr", wien: "Wien", brunnbach: "Brunnbach" };
+    if (!bases[state.base]) state.base = Object.keys(bases)[0];
+    const group = $("[data-bases]");
+    $$("button", group).forEach((b) => b.remove());
+    for (const [key, label] of Object.entries(bases)) {
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.base = key; b.textContent = label;
+      b.setAttribute("aria-pressed", String(key === state.base));
+      group.appendChild(b);
+    }
+  }
+
   async function init() {
     load();
-    $$("[data-base]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.base === state.base)));
     const sub = $("[data-subscribe]");
     if (location.protocol === "https:") sub.href = new URL("radar.ics", location.href).href.replace(/^https:/, "webcal:");
     try {
@@ -396,6 +540,8 @@
       return;
     }
     $(".sample").hidden = !state.data.sample;
+    renderBases();
+    await importFromHash();
     renderFoot(); renderCount();
     if (document.fonts?.ready) await document.fonts.ready;
     setView("weekend");

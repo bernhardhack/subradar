@@ -16,6 +16,6 @@ together with your recent swipes (feedback/swipes.json).
 - Anything that is mostly a sponsor event
 
 ## Context
-- I live in Vienna and often spend weekends in Brunnbach (Ennstal).
-- From Brunnbach, Steyr, Linz and Wels are realistic; Vienna only for something special.
+- Weekends I'm mostly in Steyr, sometimes at my house in Brunnbach (Ennstal); weekdays in Vienna.
+- On weekends Steyr, Linz and Wels are easy; Vienna only for something special.
 - I like being outdoors on dry weekends in Brunnbach.

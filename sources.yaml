@@ -4,13 +4,19 @@ timezone: Europe/Vienna
 window_days: 120          # how far ahead to look (long enough to catch "book early" shows)
 calendar_min_score: 7     # events at or above this score go into the subscribable radar.ics
 
-# Rough door-to-door minutes from each base. Used by the Wien / Brunnbach toggle in the app.
+# Where you can be. The first one is the app's default. The keys are used in travel_minutes.
+bases:
+  steyr: Steyr
+  wien: Wien
+  brunnbach: Brunnbach
+
+# Rough door-to-door minutes from each base. Used by the "Ich bin in" toggle in the app.
 travel_minutes:
-  Wien:      { wien: 20,  brunnbach: 150 }
-  Linz:      { wien: 100, brunnbach: 75 }
-  Wels:      { wien: 120, brunnbach: 80 }
-  Steyr:     { wien: 130, brunnbach: 40 }
-  Brunnbach: { wien: 150, brunnbach: 0 }
+  Steyr:     { steyr: 10,  wien: 130, brunnbach: 40 }
+  Linz:      { steyr: 45,  wien: 100, brunnbach: 75 }
+  Wels:      { steyr: 45,  wien: 120, brunnbach: 80 }
+  Wien:      { steyr: 130, wien: 20,  brunnbach: 150 }
+  Brunnbach: { steyr: 40,  wien: 150, brunnbach: 0 }
 
 # Each source is tried in this order: ics (if given) -> calendar links on the page ->
 # schema.org event data on the page -> Claude reads the page text (needs ANTHROPIC_API_KEY).

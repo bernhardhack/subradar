@@ -17,6 +17,7 @@ class Config:
     window_days: int
     calendar_min_score: float
     travel: dict[str, dict[str, int]]
+    bases: dict[str, str]
     sources: list[SourceConfig]
     keywords_plus: list[str]
     keywords_minus: list[str]
@@ -37,6 +38,7 @@ def load_config(root: Path) -> Config:
         window_days=int(raw.get("window_days", 120)),
         calendar_min_score=float(raw.get("calendar_min_score", 7)),
         travel=raw.get("travel_minutes") or {},
+        bases=raw.get("bases") or {"steyr": "Steyr", "wien": "Wien", "brunnbach": "Brunnbach"},
         sources=[SourceConfig(**s) for s in raw.get("sources", [])],
         keywords_plus=[k.lower() for k in kw.get("plus", [])],
         keywords_minus=[k.lower() for k in kw.get("minus", [])],

@@ -35,7 +35,6 @@ sources:
   - name: Ars Electronica
     city: Linz
     url: https://ars.electronica.art/
-    local_times: true     # their event data marks local times as UTC
     exclude: ["Deep Space Selection", "Führung", "Highlight", "Kinder", "Famil", "Ferienprogramm", "Tour \\d"]
     max_repeats: 1
   - name: Arena Wien

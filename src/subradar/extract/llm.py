@@ -54,7 +54,8 @@ def evidence_ok(evidence: str, page: str, day: date) -> bool:
     return re.search(rf"(?<!\d)0?{day.day}(?!\d)", ev) is not None
 
 
-def extract_with_llm(text: str, src: SourceConfig, page_url: str, tz: ZoneInfo, ai: Claude, today: date) -> list[Event]:
+def extract_with_llm(text: str, src: SourceConfig, page_url: str, tz: ZoneInfo, ai: Claude, today: date,
+                     stats: dict | None = None) -> list[Event]:
     prompt = (
         f"Today is {today.isoformat()} ({today.strftime('%A')}). Venue: {src.name}, {src.city}.\n"
         f"Page: {page_url}\n\n---\n{text}\n---\n\nList every upcoming event on this page."
@@ -99,4 +100,6 @@ def extract_with_llm(text: str, src: SourceConfig, page_url: str, tz: ZoneInfo, 
         )
     if dropped:
         log.info("%s: dropped %d events without verifiable date", src.name, dropped)
+    if stats is not None:
+        stats.update(found=len(result.get("events", [])), dropped=dropped, chars=len(text))
     return events

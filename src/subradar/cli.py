@@ -75,6 +75,7 @@ def main(argv: list[str] | None = None) -> None:
     args = p.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)  # one line per request drowns the log
     out = args.out or args.root / "site"
 
     if args.cmd == "build":

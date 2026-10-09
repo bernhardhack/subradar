@@ -74,6 +74,17 @@ def _parse_dt(value: str, tz: ZoneInfo, local_times: bool = False) -> tuple[date
     return dt, all_day
 
 
+TITLE_TIME = re.compile(r"\s*\b([01]?\d|2[0-3])[:.]([0-5]\d)\s*(uhr)?\s*$", re.I)
+
+
+def split_title_time(title: str) -> tuple[str, tuple[int, int] | None]:
+    """'HandsOn: Neuro-Bionik 11:45' -> ('HandsOn: Neuro-Bionik', (11, 45))."""
+    m = TITLE_TIME.search(title)
+    if not m or m.start() == 0:
+        return title, None
+    return title[: m.start()].rstrip(" -–|,"), (int(m.group(1)), int(m.group(2)))
+
+
 def _text(v) -> str:
     if isinstance(v, list):
         v = v[0] if v else ""
@@ -100,9 +111,15 @@ def parse_jsonld(soup: BeautifulSoup, src: SourceConfig, base: str, tz: ZoneInfo
             loc = node.get("location")
             venue = _text(loc.get("name")) if isinstance(loc, dict) else ""
             desc = BeautifulSoup(_text(node.get("description")), "lxml").get_text(" ", strip=True)
+            title = BeautifulSoup(_text(node["name"]), "lxml").get_text(" ", strip=True)
+            title, clock = split_title_time(title)
+            if clock and not all_day:
+                # a time printed in the title is what visitors see: trust it over the data's offset
+                shift = start.replace(hour=clock[0], minute=clock[1]) - start
+                start, end = start + shift, (end + shift if end else None)
             events.append(
                 Event(
-                    title=BeautifulSoup(_text(node["name"]), "lxml").get_text(" ", strip=True),
+                    title=title,
                     start=start,
                     end=end,
                     all_day=all_day,

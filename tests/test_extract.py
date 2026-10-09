@@ -124,4 +124,13 @@ def test_past_only_results_count_as_empty(src, fake_claude):
     respx.get("https://venue.example/").respond(200, text="<html><body><p>Archiv: 3.3. Alte Show</p></body></html>")
     ai, _ = fake_claude(lambda kw: {"events": [{"title": "Alte Show", "date": "2026-03-03", "evidence": "3.3. Alte Show"}]})
     events, method = extract_source(src, Fetcher(retries=0), TZ, ai, date(2026, 10, 9))
-    assert events == [] and "no upcoming" in method
+    assert events == [] and "no upcoming" in method and "0 upcoming" in method
+
+
+def test_time_in_title_wins_and_is_removed(src):
+    from subradar.extract.html import split_title_time
+    assert split_title_time("HandsOn: Neuro-Bionik 11:45") == ("HandsOn: Neuro-Bionik", (11, 45))
+    assert split_title_time("20:00 Konzert") == ("20:00 Konzert", None)
+    html = '<script type="application/ld+json">{"@type":"Event","name":"HandsOn: Neuro-Bionik 11:45","startDate":"2026-10-10T13:45:00+02:00","endDate":"2026-10-10T14:45:00+02:00"}</script>'
+    e = parse_jsonld(soup_of(html), src, "https://x/", TZ)[0]
+    assert e.title == "HandsOn: Neuro-Bionik" and (e.start.hour, e.start.minute) == (11, 45) and e.end.hour == 12

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SubRadar</title>
+<meta name="description" content="Was am Wochenende in Oberösterreich und Wien los ist, nach meinem Geschmack sortiert.">
+<meta name="theme-color" content="#BFC3BC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anybody:ital,wdth,wght@0,50..150,300..900;1,50..150,300..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <h1 class="mark">SubRadar</h1>
+  <div class="base" role="group" aria-label="Wo bist du am Wochenende?">
+    <span class="base-label">Ich bin in</span>
+    <button type="button" data-base="wien" aria-pressed="true">Wien</button>
+    <button type="button" data-base="brunnbach" aria-pressed="false">Brunnbach</button>
+  </div>
+</header>
+
+<p class="sample" hidden>Beispieldaten. Echte Termine erscheinen nach dem ersten Lauf.</p>
+
+<nav class="tabs" role="tablist" aria-label="Ansicht">
+  <button role="tab" type="button" data-view="weekend" aria-selected="true">Wochenende</button>
+  <button role="tab" type="button" data-view="later" aria-selected="false">Später</button>
+  <button role="tab" type="button" data-view="saved" aria-selected="false">Gemerkt <span class="count" data-count></span></button>
+</nav>
+
+<main>
+  <section class="deck-wrap" data-panel="deck">
+    <p class="range" data-range></p>
+    <div class="deck" data-deck aria-live="polite"></div>
+    <div class="actions">
+      <button type="button" class="act act-no" data-act="no" aria-label="Nö, nicht für mich (Pfeil links)">Nö</button>
+      <button type="button" class="act act-undo" data-act="undo" aria-label="Letzte Entscheidung zurücknehmen">Zurück</button>
+      <button type="button" class="act act-yes" data-act="yes" aria-label="Hin, merken (Pfeil rechts)">Hin</button>
+    </div>
+  </section>
+
+  <section class="saved" data-panel="saved" hidden>
+    <div data-saved-list></div>
+    <div class="saved-tools">
+      <a class="tool" data-subscribe href="radar.ics">Top-Tipps als Kalender abonnieren</a>
+      <button type="button" class="tool" data-export>Swipes exportieren</button>
+      <p class="hint">Die exportierte Datei als <code>feedback/swipes.json</code> ins Repo legen, dann lernt die Bewertung von deinen Entscheidungen.</p>
+    </div>
+  </section>
+</main>
+
+<dialog class="sheet" data-sheet aria-labelledby="sheet-title">
+  <div class="sheet-body" data-sheet-body></div>
+  <button type="button" class="sheet-close" data-close>Schließen</button>
+</dialog>
+
+<footer class="foot" data-foot></footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>

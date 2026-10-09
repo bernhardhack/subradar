@@ -1,0 +1,68 @@
+# SubRadar configuration — edit freely, no code changes needed.
+
+timezone: Europe/Vienna
+window_days: 120          # how far ahead to look (long enough to catch "book early" shows)
+calendar_min_score: 7     # events at or above this score go into the subscribable radar.ics
+
+# Rough door-to-door minutes from each base. Used by the Wien / Brunnbach toggle in the app.
+travel_minutes:
+  Wien:      { wien: 20,  brunnbach: 150 }
+  Linz:      { wien: 100, brunnbach: 75 }
+  Wels:      { wien: 120, brunnbach: 80 }
+  Steyr:     { wien: 130, brunnbach: 40 }
+  Brunnbach: { wien: 150, brunnbach: 0 }
+
+# Each source is tried in this order: ics (if given) -> calendar links on the page ->
+# schema.org event data on the page -> Claude reads the page text (needs ANTHROPIC_API_KEY).
+# The pipeline also follows one "Programm / Events / Kalender" link from the start page.
+# Optional per source: ics: <url>, program: <url>, enabled: false
+sources:
+  - name: Kulturverein Röda
+    city: Steyr
+    url: https://www.roeda.at/
+  - name: KAPU
+    city: Linz
+    url: https://www.kapu.or.at/
+  - name: Stadtwerkstatt
+    city: Linz
+    url: https://stwst.at/
+  - name: Alter Schlachthof
+    city: Wels
+    url: https://www.schlachthofwels.at/
+  - name: Ars Electronica
+    city: Linz
+    url: https://ars.electronica.art/
+  - name: Arena Wien
+    city: Wien
+    url: https://arena.wien/
+  - name: Chelsea
+    city: Wien
+    url: https://www.chelsea.co.at/
+  # Not yet checked — confirm the address, then remove "enabled: false".
+  - name: Fluc
+    city: Wien
+    url: https://fluc.at/
+    enabled: false
+  - name: rhiz
+    city: Wien
+    url: https://rhiz.wien/
+    enabled: false
+
+# Used only when no API key is set (simple keyword scoring instead of Claude).
+keywords:
+  plus: [punk, post-punk, noise, darkwave, synth, electronic, experimental, avantgarde,
+         medienkunst, media art, hacker, cyber, diy, improv, drone, wave, lesung, performance]
+  minus: [tribute, cover, schlager, oktoberfest, kinderprogramm, party hits, après]
+
+# Weekend hikes around Brunnbach, suggested when the forecast is dry.
+outdoor:
+  location: { name: Brunnbach, lat: 47.84, lon: 14.53 }
+  routes:
+    - name: Hohe Dirn
+      url: https://www.nationalpark-kalkalpen.at/
+    - name: Große Schlucht im Reichraminger Hintergebirge
+      url: https://www.nationalpark-kalkalpen.at/
+    - name: Hintergebirgsradweg
+      url: https://www.nationalpark-kalkalpen.at/
+    - name: Schoberstein
+      url: https://www.nationalpark-kalkalpen.at/

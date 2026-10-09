@@ -1,0 +1,9 @@
+{
+  "name": "SubRadar",
+  "short_name": "SubRadar",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#BFC3BC",
+  "theme_color": "#BFC3BC",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

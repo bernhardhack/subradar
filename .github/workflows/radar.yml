@@ -1,0 +1,62 @@
+name: Radar
+
+on:
+  schedule:
+    - cron: "30 4 * * *"   # daily, 06:30 Vienna summer time / 05:30 winter time
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: radar
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Tests
+        run: uv run --group dev pytest -q
+      - name: Restore Claude cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: claude-${{ github.run_id }}
+          restore-keys: claude-
+      - name: Build radar
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SUBRADAR_MODEL: ${{ vars.SUBRADAR_MODEL }}
+        run: uv run subradar build
+      - name: Thursday digest
+        if: github.event_name == 'schedule' && github.event.schedule == '30 4 * * *'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ "$(TZ=Europe/Vienna date +%u)" = "4" ]; then
+            uv run subradar digest --url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

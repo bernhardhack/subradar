@@ -1,0 +1,22 @@
+[
+  {"title": "Kältekammer", "day_offset": 0, "time": "20:30", "venue": "Kulturverein Röda", "city": "Steyr", "url": "https://www.roeda.at/", "source": "sample",
+   "description": "Kalter Synth-Wave aus Leipzig, dazu ein lokales Noise-Duo als Support.", "score": 8.5, "why": "Darkwave mit echten Synths statt Laptop, und Röda ist von Brunnbach nur 40 Minuten.", "tags": ["darkwave", "synth"]},
+  {"title": "Signal/Rauschen: Offenes Hacklab", "day_offset": 0, "time": "18:00", "venue": "Stadtwerkstatt", "city": "Linz", "url": "https://stwst.at/", "source": "sample",
+   "description": "Löten, Funk-Experimente und kurze Talks zu selbstgebauter Infrastruktur.", "score": 7.8, "why": "Hackerkultur zum Anfassen, mit Lötkolben statt Vortragsfolien.", "tags": ["hacklab", "medienkunst"]},
+  {"title": "Die Zahnärzte", "day_offset": 1, "time": "21:00", "venue": "KAPU", "city": "Linz", "url": "https://www.kapu.or.at/", "source": "sample",
+   "description": "Post-Punk mit Saxophon, zweite Platte frisch draußen.", "score": 8.1, "why": "Kantiger Post-Punk in einem kleinen Raum, der Abend wird laut und eng.", "tags": ["post-punk"]},
+  {"title": "Hohe Dirn", "day_offset": 1, "time": "09:00", "venue": "Brunnbach", "city": "Brunnbach", "url": "https://www.nationalpark-kalkalpen.at/", "source": "Wetter", "kind": "outdoor",
+   "description": "", "score": 7.0, "why": "Trocken angesagt: 10 % Regenrisiko, bis 17 °C.", "tags": ["draußen"]},
+  {"title": "Feedback Loops — Kybernetik und Kunst", "day_offset": 1, "time": "17:00", "venue": "Ars Electronica", "city": "Linz", "url": "https://ars.electronica.art/", "source": "sample",
+   "description": "Gespräch und Demo zu rückgekoppelten Systemen in der Medienkunst.", "score": 7.2, "why": "Kybernetik als Kunstpraxis, mit Live-Demo statt Folien.", "tags": ["talk", "kybernetik"]},
+  {"title": "Best of 80s Partynacht", "day_offset": 1, "time": "22:00", "venue": "Alter Schlachthof", "city": "Wels", "url": "https://www.schlachthofwels.at/", "source": "sample",
+   "description": "Die größten Hits der 80er mit DJ-Team.", "score": 2.0, "why": "Hit-Party, eher nicht deine Welt.", "tags": ["party"]},
+  {"title": "Mira Oszillat", "day_offset": 2, "time": "19:30", "venue": "Alter Schlachthof", "city": "Wels", "url": "https://www.schlachthofwels.at/", "source": "sample",
+   "description": "Drone und Feldaufnahmen, quadrofonisch im kleinen Saal.", "score": 7.6, "why": "Drone im Quadro-Setup, am Sonntagabend genau richtig.", "tags": ["drone", "experimental"]},
+  {"title": "Wohnzimmerlesung: Netz ohne Plattform", "day_offset": 2, "time": "18:00", "venue": "Chelsea", "city": "Wien", "url": "https://www.chelsea.co.at/", "source": "sample",
+   "description": "Lesung und Diskussion über ein Internet ohne Konzerne.", "score": 6.8, "why": "Doctorow-Themen im Wohnzimmerformat, falls du am Sonntag in Wien bist.", "tags": ["lesung"]},
+  {"title": "Nachtstrom Festival", "day_offset": 34, "time": "16:00", "venue": "Arena Wien", "city": "Wien", "url": "https://arena.wien/", "source": "sample",
+   "description": "Zwei Tage elektronische Avantgarde, drei Bühnen.", "score": 8.8, "why": "Seltene Line-up-Dichte, letzte Ausgabe war schnell ausverkauft.", "tags": ["festival", "electronic"], "advance": true},
+  {"title": "Schweizer Wellen", "day_offset": 12, "time": "20:00", "venue": "KAPU", "city": "Linz", "url": "https://www.kapu.or.at/", "source": "sample",
+   "description": "Abend zur Schweizer Post-Punk-Geschichte mit zwei Live-Acts.", "score": 7.4, "why": "Post-Punk-Archäologie mit Live-Sets, unter der Woche gut machbar.", "tags": ["post-punk"]}
+]

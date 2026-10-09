@@ -14,7 +14,7 @@ DEFAULT_MODEL = "claude-haiku-4-5"
 
 class Claude:
     def __init__(self, cache_dir: Path, model: str | None = None, client=None):
-        self.model = model or os.environ.get("SUBRADAR_MODEL", DEFAULT_MODEL)
+        self.model = model or os.environ.get("SUBRADAR_MODEL") or DEFAULT_MODEL  # empty var = default
         self.cache_dir = cache_dir
         cache_dir.mkdir(parents=True, exist_ok=True)
         if client is None:

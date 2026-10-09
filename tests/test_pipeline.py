@@ -119,3 +119,11 @@ def test_local_times_ignores_wrong_utc_label():
     src = SourceConfig(name="Ars", city="Linz", url="https://x/", local_times=True)
     e = parse_jsonld(soup_of(html), src, "https://x/", TZ)[0]
     assert e.start.hour == 14 and e.venue == "Ars"
+
+
+def test_empty_model_variable_falls_back_to_default(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+    from subradar.ai import DEFAULT_MODEL, Claude
+
+    monkeypatch.setenv("SUBRADAR_MODEL", "")  # what GitHub passes for an unset repo variable
+    assert Claude(tmp_path, client=SimpleNamespace()).model == DEFAULT_MODEL

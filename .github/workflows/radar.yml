@@ -32,6 +32,8 @@ jobs:
           path: .cache
           key: claude-${{ github.run_id }}
           restore-keys: claude-
+      - name: Install browser (for sites that load their programme with JavaScript)
+        run: uv run playwright install --with-deps chromium
       - name: Build radar
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

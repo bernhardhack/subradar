@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from typing import Callable
 from zoneinfo import ZoneInfo
 
 from ..ai import Claude
@@ -15,7 +16,12 @@ from .llm import extract_with_llm
 log = logging.getLogger(__name__)
 
 
-def extract_source(src: SourceConfig, fetcher: Fetcher, tz: ZoneInfo, ai: Claude | None, today: date) -> tuple[list[Event], str]:
+def _upcoming(events: list[Event], today: date) -> list[Event]:
+    return [e for e in events if (e.end or e.start).date() >= today]
+
+
+def extract_source(src: SourceConfig, fetcher: Fetcher, tz: ZoneInfo, ai: Claude | None, today: date,
+                   renderer: Callable[[str], str] | None = None) -> tuple[list[Event], str]:
     """Return (events, method). Raises on hard failures so the caller can record them."""
     if src.ics:
         return parse_ics(fetcher.text(src.ics), src, tz), "ics"
@@ -46,8 +52,32 @@ def extract_source(src: SourceConfig, fetcher: Fetcher, tz: ZoneInfo, ai: Claude
         if events:
             return events, "json-ld"
 
-    # 3. Claude reads the page
+    # 3. Claude reads the page: programme page first, then the start page,
+    #    then both again rendered in a browser (for sites that load their programme with JavaScript)
     if ai is None:
         return [], "none (no structured data; set ANTHROPIC_API_KEY to read the page)"
-    url, html = pages[0]
-    return extract_with_llm(page_text(soup_of(html), url), src, url, tz, ai, today), "claude"
+    for url, html in pages:
+        events = _upcoming(extract_with_llm(page_text(soup_of(html), url), src, url, tz, ai, today), today)
+        if events:
+            return events, "claude"
+    if renderer is not None:
+        for url, _ in pages:
+            try:
+                html = renderer(url)
+            except Exception as e:
+                log.info("%s: rendering %s failed: %s", src.name, url, e)
+                continue
+            for ics_url in find_ics_links(soup_of(html), url)[:1]:
+                try:
+                    events = _upcoming(parse_ics(fetcher.text(ics_url), src, tz), today)
+                    if events:
+                        return events, "ics (rendered page)"
+                except Exception:
+                    pass
+            events = _upcoming(parse_jsonld(soup_of(html), src, url, tz), today)
+            if events:
+                return events, "json-ld (rendered page)"
+            events = _upcoming(extract_with_llm(page_text(soup_of(html), url), src, url, tz, ai, today), today)
+            if events:
+                return events, "claude (rendered page)"
+    return [], "claude (no upcoming events found on the page)"

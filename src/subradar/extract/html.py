@@ -17,7 +17,7 @@ EVENT_TYPES = {
     "ScreeningEvent", "DanceEvent", "LiteraryEvent", "ComedyEvent", "EducationEvent",
     "VisualArtsEvent", "ChildrensEvent", "BusinessEvent",
 }
-PROGRAM_WORDS = re.compile(r"\b(programm|program|events?|veranstaltungen|kalender|termine|spielplan|konzerte|calendar)\b", re.I)
+PROGRAM_WORDS = re.compile(r"\b(programm|program|events?|veranstaltungen|kalender|termine|spielplan|konzerte|concerts?|calendar)\b", re.I)
 
 
 def soup_of(html: str) -> BeautifulSoup:

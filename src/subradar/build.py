@@ -14,7 +14,7 @@ from .calendar import google_url, ics_bytes
 from .config import Config, load_config
 from .curate import curate
 from .extract import extract_source
-from .fetch import Fetcher
+from .fetch import Fetcher, Renderer
 from .models import Event, SourceConfig, SourceResult
 from .outdoor import outdoor_events
 
@@ -30,14 +30,15 @@ def dedupe(events: list[Event]) -> list[Event]:
     return list(seen.values())
 
 
-def collect(cfg: Config, fetcher: Fetcher, ai: Claude | None, today: date) -> tuple[list[Event], list[SourceResult]]:
+def collect(cfg: Config, fetcher: Fetcher, ai: Claude | None, today: date,
+            renderer=None) -> tuple[list[Event], list[SourceResult]]:
     events: list[Event] = []
     results: list[SourceResult] = []
     for src in cfg.sources:
         if not src.enabled:
             continue
         try:
-            found, method = extract_source(src, fetcher, cfg.tz, ai, today)
+            found, method = extract_source(src, fetcher, cfg.tz, ai, today, renderer)
             found = apply_excludes(found, src)
             events.extend(found)
             results.append(SourceResult(name=src.name, ok=bool(found), method=method, count=len(found)))
@@ -116,7 +117,17 @@ def build(root: Path, out: Path, *, use_ai: bool = True, now: datetime | None = 
     if ai is None:
         log.info("No ANTHROPIC_API_KEY: structured sources only, keyword scoring.")
     fetcher = Fetcher()
-    events, results = collect(cfg, fetcher, ai, today)
+    renderer = None
+    if ai is not None and Renderer.available():
+        try:
+            renderer = Renderer()
+        except Exception as e:  # no browser installed: carry on without rendering
+            log.warning("browser rendering unavailable: %s", e)
+    try:
+        events, results = collect(cfg, fetcher, ai, today, renderer)
+    finally:
+        if renderer is not None:
+            renderer.close()
     events = cap_repeats(window(dedupe(events), cfg, now), cfg)
     scoring = curate(events, cfg, ai, root / "feedback" / "swipes.json")
     events.extend(outdoor_events(cfg, fetcher, today))

@@ -28,6 +28,7 @@ sources:
   - name: Stadtwerkstatt
     city: Linz
     url: https://stwst.at/
+    program: https://club.stwst.at/
   - name: Alter Schlachthof
     city: Wels
     url: https://www.schlachthofwels.at/
@@ -35,14 +36,16 @@ sources:
     city: Linz
     url: https://ars.electronica.art/
     local_times: true     # their event data marks local times as UTC
-    exclude: ["Deep Space Selection", "Führung", "Highlight", "Kinder", "Familie"]
+    exclude: ["Deep Space Selection", "Führung", "Highlight", "Kinder", "Famil", "Ferienprogramm", "Tour \\d"]
     max_repeats: 1
   - name: Arena Wien
     city: Wien
     url: https://arena.wien/
+    program: https://arena.wien/Home/Event-List
   - name: Chelsea
     city: Wien
     url: https://www.chelsea.co.at/
+    program: https://www.chelsea.co.at/concerts.php
   # Not yet checked — confirm the address, then remove "enabled: false".
   - name: Fluc
     city: Wien

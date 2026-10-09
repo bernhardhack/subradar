@@ -97,3 +97,31 @@ def test_fetcher_retries_server_errors_but_not_404():
     except Exception as e:
         assert "404" in str(e)
     assert gone.call_count == 1
+
+
+@respx.mock
+def test_rendered_page_used_when_static_html_is_empty(src, fake_claude):
+    """Sites that build their programme with JavaScript: Claude gets the rendered page."""
+    respx.get("https://venue.example/").respond(200, text="<html><body><div id=app></div></body></html>")
+    rendered = "<html><body><h3>Kältekammer</h3><p>Fr 16.10. 20:30</p></body></html>"
+    seen = []
+
+    def responder(kw):
+        text = kw["messages"][0]["content"]
+        seen.append("Kältekammer" in text)
+        if "Kältekammer" not in text:
+            return {"events": []}
+        return {"events": [{"title": "Kältekammer", "date": "2026-10-16", "start_time": "20:30", "evidence": "Fr 16.10. 20:30"}]}
+
+    ai, _ = fake_claude(responder)
+    events, method = extract_source(src, Fetcher(retries=0), TZ, ai, date(2026, 10, 9), renderer=lambda url: rendered)
+    assert method == "claude (rendered page)" and [e.title for e in events] == ["Kältekammer"]
+    assert seen == [False, True]
+
+
+@respx.mock
+def test_past_only_results_count_as_empty(src, fake_claude):
+    respx.get("https://venue.example/").respond(200, text="<html><body><p>Archiv: 3.3. Alte Show</p></body></html>")
+    ai, _ = fake_claude(lambda kw: {"events": [{"title": "Alte Show", "date": "2026-03-03", "evidence": "3.3. Alte Show"}]})
+    events, method = extract_source(src, Fetcher(retries=0), TZ, ai, date(2026, 10, 9))
+    assert events == [] and "no upcoming" in method

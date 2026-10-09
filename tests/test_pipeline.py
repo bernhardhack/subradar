@@ -97,3 +97,25 @@ def test_build_survives_dead_sites(project, monkeypatch):
     first = next(e for e in data["events"] if e["title"] == "Noise & Static")
     assert first["travel"]["brunnbach"] == 40 and first["gcal"].startswith("https://calendar.google.com")
     assert (out / first["ics"]).exists() and (out / "radar.ics").exists() and (out / "index.html").exists()
+
+
+def test_excludes_and_repeat_cap(project):
+    from subradar.build import apply_excludes, cap_repeats
+    from subradar.models import SourceConfig
+
+    cfg = load_config(project)
+    src = SourceConfig(name="test", city="Linz", url="https://x", exclude=["Deep Space", "führung"])
+    events = [ev("Deep Space Selection (DE)"), ev("Highlightführung"), ev("Noise Talk")]
+    assert [e.title for e in apply_excludes(events, src)] == ["Noise Talk"]
+    daily = [ev("Kinoabend", day=d) for d in range(10, 16)]
+    assert len(cap_repeats(daily, cfg)) == 2
+
+
+def test_local_times_ignores_wrong_utc_label():
+    from subradar.extract.html import parse_jsonld, soup_of
+    from subradar.models import SourceConfig
+
+    html = '<script type="application/ld+json">{"@type":"Event","name":"Talk 14:00","startDate":"2026-10-09T14:00:00Z","location":{"name":"Anmeldung an der Kassa erforderlich"}}</script>'
+    src = SourceConfig(name="Ars", city="Linz", url="https://x/", local_times=True)
+    e = parse_jsonld(soup_of(html), src, "https://x/", TZ)[0]
+    assert e.start.hour == 14 and e.venue == "Ars"

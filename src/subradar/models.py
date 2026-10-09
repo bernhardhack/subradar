@@ -50,6 +50,9 @@ class SourceConfig(BaseModel):
     ics: str | None = None
     program: str | None = None
     enabled: bool = True
+    exclude: list[str] = Field(default_factory=list)  # regexes matched against titles
+    local_times: bool = False  # site labels local clock times as UTC: ignore the offset
+    max_repeats: int = 2  # keep at most this many upcoming dates of the same title
 
 
 class SourceResult(BaseModel):

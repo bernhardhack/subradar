@@ -64,10 +64,13 @@ def _is_event(node: dict) -> bool:
     return any(x in EVENT_TYPES for x in types if isinstance(x, str))
 
 
-def _parse_dt(value: str, tz: ZoneInfo) -> tuple[datetime, bool]:
+def _parse_dt(value: str, tz: ZoneInfo, local_times: bool = False) -> tuple[datetime, bool]:
     dt = dtparser.isoparse(value)
     all_day = len(value.strip()) <= 10
-    dt = dt.replace(tzinfo=tz) if dt.tzinfo is None else dt.astimezone(tz)
+    if dt.tzinfo is None or local_times:
+        dt = dt.replace(tzinfo=tz)
+    else:
+        dt = dt.astimezone(tz)
     return dt, all_day
 
 
@@ -90,8 +93,8 @@ def parse_jsonld(soup: BeautifulSoup, src: SourceConfig, base: str, tz: ZoneInfo
             if not _is_event(node) or not node.get("startDate") or not node.get("name"):
                 continue
             try:
-                start, all_day = _parse_dt(str(node["startDate"]), tz)
-                end = _parse_dt(str(node["endDate"]), tz)[0] if node.get("endDate") else None
+                start, all_day = _parse_dt(str(node["startDate"]), tz, src.local_times)
+                end = _parse_dt(str(node["endDate"]), tz, src.local_times)[0] if node.get("endDate") else None
             except (ValueError, OverflowError):
                 continue
             loc = node.get("location")
@@ -103,7 +106,7 @@ def parse_jsonld(soup: BeautifulSoup, src: SourceConfig, base: str, tz: ZoneInfo
                     start=start,
                     end=end,
                     all_day=all_day,
-                    venue=venue if venue and len(venue) < 60 else src.name,
+                    venue=venue if venue and len(venue) < 60 and len(venue.split()) <= 4 else src.name,
                     city=src.city,
                     url=urljoin(base, _text(node.get("url"))) if node.get("url") else base,
                     source=src.name,

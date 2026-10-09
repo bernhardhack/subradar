@@ -15,7 +15,9 @@ travel_minutes:
 # Each source is tried in this order: ics (if given) -> calendar links on the page ->
 # schema.org event data on the page -> Claude reads the page text (needs ANTHROPIC_API_KEY).
 # The pipeline also follows one "Programm / Events / Kalender" link from the start page.
-# Optional per source: ics: <url>, program: <url>, enabled: false
+# Optional per source: ics: <url>, program: <url>, enabled: false,
+#   exclude: [regex, ...] (drop matching titles), max_repeats: 2 (dates per recurring title),
+#   local_times: true (if the site's times come out shifted by 1-2 hours)
 sources:
   - name: Kulturverein Röda
     city: Steyr
@@ -32,6 +34,9 @@ sources:
   - name: Ars Electronica
     city: Linz
     url: https://ars.electronica.art/
+    local_times: true     # their event data marks local times as UTC
+    exclude: ["Deep Space Selection", "Führung", "Highlight", "Kinder", "Familie"]
+    max_repeats: 1
   - name: Arena Wien
     city: Wien
     url: https://arena.wien/

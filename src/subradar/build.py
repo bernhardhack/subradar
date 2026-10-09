@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -13,7 +15,7 @@ from .config import Config, load_config
 from .curate import curate
 from .extract import extract_source
 from .fetch import Fetcher
-from .models import Event, SourceResult
+from .models import Event, SourceConfig, SourceResult
 from .outdoor import outdoor_events
 
 log = logging.getLogger(__name__)
@@ -36,6 +38,7 @@ def collect(cfg: Config, fetcher: Fetcher, ai: Claude | None, today: date) -> tu
             continue
         try:
             found, method = extract_source(src, fetcher, cfg.tz, ai, today)
+            found = apply_excludes(found, src)
             events.extend(found)
             results.append(SourceResult(name=src.name, ok=bool(found), method=method, count=len(found)))
             log.info("%-22s %3d events via %s", src.name, len(found), method)
@@ -43,6 +46,26 @@ def collect(cfg: Config, fetcher: Fetcher, ai: Claude | None, today: date) -> tu
             results.append(SourceResult(name=src.name, ok=False, error=str(e)[:200]))
             log.warning("%-22s failed: %s", src.name, e)
     return events, results
+
+
+def apply_excludes(events: list[Event], src: SourceConfig) -> list[Event]:
+    if not src.exclude:
+        return events
+    pattern = re.compile("|".join(src.exclude), re.I)
+    return [e for e in events if not pattern.search(e.title)]
+
+
+def cap_repeats(events: list[Event], cfg: Config) -> list[Event]:
+    """Recurring programme items (daily shows, tours) keep only their next few dates."""
+    limits = {s.name: s.max_repeats for s in cfg.sources}
+    seen: dict[tuple[str, str], int] = defaultdict(int)
+    keep = []
+    for e in sorted(events, key=lambda e: e.start):
+        key = (e.source, re.sub(r"\W+", " ", e.title.lower()).strip())
+        seen[key] += 1
+        if seen[key] <= limits.get(e.source, 2):
+            keep.append(e)
+    return keep
 
 
 def window(events: list[Event], cfg: Config, now: datetime) -> list[Event]:
@@ -94,7 +117,7 @@ def build(root: Path, out: Path, *, use_ai: bool = True, now: datetime | None = 
         log.info("No ANTHROPIC_API_KEY: structured sources only, keyword scoring.")
     fetcher = Fetcher()
     events, results = collect(cfg, fetcher, ai, today)
-    events = window(dedupe(events), cfg, now)
+    events = cap_repeats(window(dedupe(events), cfg, now), cfg)
     scoring = curate(events, cfg, ai, root / "feedback" / "swipes.json")
     events.extend(outdoor_events(cfg, fetcher, today))
     finish(events, cfg)
